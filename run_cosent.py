@@ -29,7 +29,7 @@ def set_seed():
 
 def get_sent_id_tensor(s_list):
     input_ids, attention_mask, token_type_ids, labels = [], [], [], []
-    max_len = max([len(_)+2 for _ in s_list])   # 这样写不太合适 后期想办法改一下
+    max_len = max([len(_) + 2 for _ in s_list])  # 这样写不太合适 后期想办法改一下
     for s in s_list:
         inputs = tokenizer.encode_plus(text=s, text_pair=None, add_special_tokens=True, return_token_type_ids=True)
         input_ids.append(pad_to_maxlen(inputs['input_ids'], max_len=max_len))
@@ -74,7 +74,7 @@ def evaluate():
 
 def calc_loss(y_true, y_pred):
     # 1. 取出真实的标签
-    y_true = y_true[::2]    # tensor([1, 0, 1]) 真实的标签
+    y_true = y_true[::2]  # tensor([1, 0, 1]) 真实的标签
 
     # 2. 对输出的句子向量进行l2归一化   后面只需要对应为相乘  就可以得到cos值了
     norms = (y_pred ** 2).sum(axis=1, keepdims=True) ** 0.5
@@ -87,7 +87,7 @@ def calc_loss(y_true, y_pred):
     # 4. 取出负例-正例的差值
     y_pred = y_pred[:, None] - y_pred[None, :]  # 这里是算出所有位置 两两之间余弦的差值
     # 矩阵中的第i行j列  表示的是第i个余弦值-第j个余弦值
-    y_true = y_true[:, None] < y_true[None, :]   # 取出负例-正例的差值
+    y_true = y_true[:, None] < y_true[None, :]  # 取出负例-正例的差值
     y_true = y_true.float()
     y_pred = y_pred - (1 - y_true) * 1e12
     y_pred = y_pred.view(-1)
@@ -95,10 +95,8 @@ def calc_loss(y_true, y_pred):
         y_pred = torch.cat((torch.tensor([0]).float().cuda(), y_pred), dim=0)  # 这里加0是因为e^0 = 1相当于在log中加了1
     else:
         y_pred = torch.cat((torch.tensor([0]).float(), y_pred), dim=0)  # 这里加0是因为e^0 = 1相当于在log中加了1
-        
+
     return torch.logsumexp(y_pred, dim=0)
-
-
 
 
 if __name__ == '__main__':
@@ -106,7 +104,7 @@ if __name__ == '__main__':
     set_seed()
     os.makedirs(args.output_dir, exist_ok=True)
 
-    tokenizer = BertTokenizer.from_pretrained(args.pretrained_model_path)
+    tokenizer = BertTokenizer.from_pretrained('Langboat/mengzi-bert-base', cache_dir='./mengzi_pretrain')
 
     # 加载数据集
     train_sentence, train_label = load_data(args.train_data)
